@@ -1,6 +1,8 @@
 
 //MongoDB module V3
 
+// add with insertOne method
+
 //const MongoClient = require('mongodb').MongoClient;.
 //ES6 destructuring
 const {MongoClient, ObjectID} = require('mongodb');
@@ -13,6 +15,7 @@ MongoClient.connect('mongodb://localhost:27017/TodoApp',(err, client)=>{
     console.log('connected to MongoDB server');
     //create TodoApp database
     const db = client.db('TodoApp')
+
     //collection take name arguement, insertOne insert one object to server and callback function
     // db.collection('Todos').insertOne({
     //     text: 'Something to do',
@@ -25,7 +28,7 @@ MongoClient.connect('mongodb://localhost:27017/TodoApp',(err, client)=>{
     //     console.log(JSON.stringify(result.ops, undefined, 2));
     // });
 
-    //====exercise create Users collection
+    //====exercise create Users collection 
     // db.collection('Users').insertOne({
     //     //we can ad  our own id
     //     //_id: 123,
