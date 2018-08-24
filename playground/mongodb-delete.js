@@ -20,12 +20,12 @@ MongoClient.connect('mongodb://localhost:27017/TodoApp',(err, client)=>{
     //     console.log(result)
     // })
 
-    //deleteOne , delete first one
+    //deleteOne , delete first one, result the result with ok and n, just to see how many we deleted
     // db.collection('Todos').deleteOne({text:'Eat lunch'}).then((result)=>{
     //     console.log(result)
     // })
 
-    // findOneAndDelete
+    // findOneAndDelete, return the result with document that we deleted
     // db.collection('Todos').findOneAndDelete({completed:false}).then((result)=>{
     //     console.log(result)
     // })
