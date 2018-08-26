@@ -13,7 +13,7 @@ var app = express();
 //apply bodyParser to Express
 app.use(bodyParser.json());
 
-//express access to route /todos to add data
+//express to access: created route /todos to add data
 app.post('/todos',(req,res)=>{
     //console.log(req.body) to see what we get from Postman when we post JSON
 
@@ -23,7 +23,7 @@ app.post('/todos',(req,res)=>{
     });
 
     todo.save().then((doc)=>{
-        res.send(doc);
+        res.send(doc); //code 200 for success received data
     },(e)=>{
         res.status(400).send(e);
     })
@@ -34,3 +34,5 @@ app.listen(3000, ()=>{
     console.log('Started on port 3000');
 });
 
+
+module.exports = {app};
