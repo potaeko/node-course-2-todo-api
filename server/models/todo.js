@@ -1,7 +1,7 @@
 
 var mongoose = require('mongoose')
 
-var Todo = mongoose.model('Todo',{  //.model take string, Object
+var Todo = mongoose.model('Todo',{  //.model take (string, Object)
     text: {
         type: String, //type string
         //set default https://mongoosejs.com/docs/validation.html
