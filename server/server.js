@@ -10,6 +10,8 @@ var {Todo} = require('./models/todo');
 var {Users} =require('./models/User');
 
 var app = express();
+//Deploy to Heroku, if the port is defined, if not we use local 3000
+const port = process.env.PORT || 3000;
 
 //apply bodyParser to Express
 app.use(bodyParser.json());
@@ -40,8 +42,9 @@ app.get('/todos',(req,res)=>{
     })
 })
 
-app.listen(3000, ()=>{
-    console.log('Started on port 3000');
+//const port = process.env.PORT || 3000;
+app.listen(port, ()=>{
+    console.log(`Started on port ${port}`);
 });
 
 //GET /todos/1234567 , fetch id parameter
