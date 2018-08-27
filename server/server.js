@@ -7,7 +7,7 @@ var bodyParser = require('body-parser'); //take JSON and convert to object
 var {ObjectID} = require('mongodb')
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
-var {Users} =require('./models/User');
+var {Users} =require('./models/user');
 
 var app = express();
 //Deploy to Heroku, if the port is defined, if not we use local 3000
