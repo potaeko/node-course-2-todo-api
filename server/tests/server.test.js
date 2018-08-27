@@ -6,6 +6,7 @@
 
 const expect = require('expect');
 const request = require('supertest');
+const {ObjectID} = require('mongodb');
 
 //access to the files
 const {app} = require('./../server');
@@ -13,8 +14,10 @@ const {Todo} = require('./../models/todo')
 
 //***To Test GET /todos
 const todos = [{
+    _id : new ObjectID(),
     text : 'First test todo'
 }, {
+    _id : new ObjectID(),
     text : 'Second test todo'
 }]; 
 
@@ -22,7 +25,7 @@ const todos = [{
 //**To Test POST /todos We will want to delete all the data in Mongodb before the test 
 //because "expect(todos[0].text).toBe(text); " we want to get the first item 
 beforeEach((done)=>{
-    Todo.remove({}).then(()=>{
+    Todo.deleteMany({}).then(()=>{
         //insertMany method from mongoose method with const todos
         return Todo.insertMany(todos);
     }).then(done());
@@ -81,5 +84,36 @@ describe('GET /todos', () =>{
             })
             .end(done)
         })
+    });
+
+});
+//GET /todos/:id
+describe('GET /todos/:id', ()=>{
+    //Test new ObjectID with data
+    it('should return todo doc', (done)=>{
+        request(app) //supertest with express
+        .get(`/todos/${todos[0]._id.toHexString()}`)
+        .expect(200) //expect status 200
+        .expect((res)=>{ //expect res back with res body match the same text from the first todos[0]
+            expect(res.body.todo.text).toBe(todos[0].text)
+        })
+        .end(done);
+    });
+    //Test new ObjectID with no data to get 404
+    it('should return 404 if todo not found', (done)=>{
+        var hexId = new ObjectID().toHexString();
+        request(app)
+        .get(`/todos/${hexId}`)
+        .expect(404)
+        .end(done);
+    });
+    //Test route params :id 123
+    it('should return 404 for non-object ids',(done)=>{
+        request(app)
+        .get('/todos/123') //inValid id
+        .expect(404)
+        .end(done)
+
     })
+
 });
