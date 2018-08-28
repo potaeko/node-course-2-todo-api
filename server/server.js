@@ -87,7 +87,7 @@ app.delete('/todos/:id',(req,res)=>{
         if(!todo){
            return  res.status(404).send()
         }
-        //success, send deleted data
+        //success, send deleted object data
         res.send({todo})
         //error, 400 with empty body
     }).catch((e)=>{
