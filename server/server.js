@@ -1,13 +1,13 @@
 
 //======***** MOVE ALL TO SEPERATE FILE and install express and body-parser
+const _ = require('lodash') 
+const express = require('express');
+const bodyParser = require('body-parser'); //take JSON and convert to object
 
-var express = require('express');
-var bodyParser = require('body-parser'); //take JSON and convert to object
-
-var {ObjectID} = require('mongodb')
-var {mongoose} = require('./db/mongoose');
-var {Todo} = require('./models/todo');
-var {Users} =require('./models/user');
+const {ObjectID} = require('mongodb')
+const {mongoose} = require('./db/mongoose');
+const {Todo} = require('./models/todo');
+const {Users} =require('./models/user');
 
 var app = express();
 //Deploy to Heroku, if the port is defined, if not we use local 3000
@@ -42,10 +42,7 @@ app.get('/todos',(req,res)=>{
     })
 })
 
-//const port = process.env.PORT || 3000;
-app.listen(port, ()=>{
-    console.log(`Started on port ${port}`);
-});
+
 
 //GET /todos/1234567 , fetch id parameter
 app.get('/todos/:id',(req,res)=>{
@@ -95,5 +92,43 @@ app.delete('/todos/:id',(req,res)=>{
     })
 })
         
+//Update todos items
+app.patch('/todos/:id',(req,res)=>{
+    var id  = req.params.id;
+    //we use pick function from lodash here
+    //take object and pull exist property array we want to update
+    var body = _.pick(req.body, ['text', 'completed']);
+
+    //validate the id -> not valid? return 404
+    if(!ObjectID.isValid(id)){
+        return res.status(404).send();
+    }
+    //we use isBoolean function from lodash
+    //If body.completed is a Boolean and true
+    if(_.isBoolean(body.completed)&& body.completed){
+        body.completedAt = new Date().getTime(); //get time stamp
+    } else { //If If body.completed is not a Boolean or not true
+        //we will set to false and no timestamp
+        body.completed = false;
+        body.completedAt = null;
+    }
+    //We will update here   
+    Todo.findByIdAndUpdate(id, {$set:body},{new: true}).then((todo)=>{ //new is to show the update
+        //if no data for that id
+        if(!todo){
+            return res.status(404).send()
+        }
+        //success
+        res.send({todo})
+    }).catch((e)=>{ //any error
+        res.status(400).send()
+    }) 
+
+})
+
+//const port = process.env.PORT || 3000;
+app.listen(port, ()=>{
+    console.log(`Started on port ${port}`);
+});
 
 module.exports = {app};
