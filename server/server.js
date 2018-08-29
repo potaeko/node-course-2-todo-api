@@ -1,5 +1,7 @@
 
 //======***** MOVE ALL TO SEPERATE FILE and install express and body-parser
+require('./config/config.js')
+
 const _ = require('lodash') 
 const express = require('express');
 const bodyParser = require('body-parser'); //take JSON and convert to object
@@ -11,7 +13,7 @@ const {Users} =require('./models/user');
 
 var app = express();
 //Deploy to Heroku, if the port is defined, if not we use local 3000
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 //apply bodyParser to Express
 app.use(bodyParser.json());
@@ -92,7 +94,7 @@ app.delete('/todos/:id',(req,res)=>{
     })
 })
         
-//Update todos items
+//Patch, Update todos items
 app.patch('/todos/:id',(req,res)=>{
     var id  = req.params.id;
     //we use pick function from lodash here

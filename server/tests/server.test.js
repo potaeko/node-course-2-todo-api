@@ -18,7 +18,9 @@ const todos = [{
     text : 'First test todo'
 }, {
     _id : new ObjectID(),
-    text : 'Second test todo'
+    text : 'Second test todo',
+    completed: true,
+    completedAt: 333
 }]; 
 
 
@@ -37,16 +39,16 @@ describe('Test POST /todos',()=>{
 
         var text = 'Test todo text'; //we will send this text to test
         request(app)    //supertest with app from server.js
-        .post('/todos') //post to /todos collection URL
-        .send({text}) //send text 
-        .expect(200)    //expect to get 200 code, OK
-        .expect((res)=>{   //expect to get res.body.text from Express === text we send
-            expect(res.body.text).toBe(text);
-        })
-        .end((err, res)=>{ //we want to see what got store in Mongodb
-            if(err){    //handle the error
-                return done(err); //printing the error, return will stop the code here, call done for supertest
-            }
+            .post('/todos') //post to /todos collection URL
+            .send({text}) //send text 
+            .expect(200)    //expect to get 200 code, OK
+            .expect((res)=>{   //expect to get res.body.text from Express === text we send
+                expect(res.body.text).toBe(text);
+            })
+            .end((err, res)=>{ //we want to see what got store in Mongodb
+                if(err){    //handle the error
+                    return done(err); //printing the error, return will stop the code here, call done for supertest
+                }
             Todo.find({text}).then((todos)=>{ //we want to check todos with var text we send
                 expect(todos.length).toBe(1);   //should have only 1 item in todos object
                 expect(todos[0].text).toBe(text);   //expect text we send only 1 item to be text
@@ -58,18 +60,18 @@ describe('Test POST /todos',()=>{
     //send empty object, get 400 code, assumption from database no data in todos
     it('should not create todo with invalid body data', (done)=>{
         request(app)
-        .post('/todos') //post data
-        .send({}) //send empty object to /todos route
-        .expect(400) //expect 400 bad request
-        .end((err,res)=>{
-            if(err){    //handle the error
-                return done(err); //printing the error, return will stop the code here, call done for supertest
-            }
+            .post('/todos') //post data
+            .send({}) //send empty object to /todos route
+            .expect(400) //expect 400 bad request
+            .end((err,res)=>{
+                if(err){    //handle the error
+                    return done(err); //printing the error, return will stop the code here, call done for supertest
+                 }
 
             Todo.find().then((todos)=>{
                 expect(todos.length).toBe(2); //expect two objects in todos that we created as todos
                 done(); //done() for asynchronous
-        }).catch((e)=>done(e))
+            }).catch((e)=>done(e))
         });
     });
 
@@ -77,10 +79,10 @@ describe('Test POST /todos',()=>{
 describe('GET /todos', () =>{
     it('should get all todos', (done)=>{
         request(app)
-        .get('/todos') //get data
-        .expect(200) //expect to get 200 code ,ok
-        .expect((res)=>{    //res.body.todos.length should be 2
-            expect(res.body.todos.length).toBe(2)
+            .get('/todos') //get data
+            .expect(200) //expect to get 200 code ,ok
+            .expect((res)=>{    //res.body.todos.length should be 2
+                expect(res.body.todos.length).toBe(2)
             })
             .end(done)
         })
@@ -92,67 +94,135 @@ describe('GET /todos/:id', ()=>{
     //Test new ObjectID with data
     it('should return todo doc', (done)=>{
         request(app) //supertest with express
-        .get(`/todos/${todos[0]._id.toHexString()}`)
-        .expect(200) //expect status 200
-        .expect((res)=>{ //expect res back with res body match the same text from the first todos[0]
-            expect(res.body.todo.text).toBe(todos[0].text)
-        })
-        .end(done);
+            .get(`/todos/${todos[0]._id.toHexString()}`)
+            .expect(200) //expect status 200
+            .expect((res)=>{ //expect res back with res body match the same text from the first todos[0]
+                expect(res.body.todo.text).toBe(todos[0].text)
+             })
+            .end(done);
     });
     //Test new ObjectID with no data to get 404
     it('should return 404 if todo not found', (done)=>{
         var hexId = new ObjectID().toHexString();
         request(app)
-        .get(`/todos/${hexId}`)
-        .expect(404)
-        .end(done);
+            .get(`/todos/${hexId}`)
+            .expect(404)
+            .end(done);
     });
     //Test route params :id 123
     it('should return 404 for non-object ids',(done)=>{
         request(app)
-        .get('/todos/123') //inValid id
-        .expect(404)
-        .end(done)
+            .get('/todos/123') //inValid id
+            .expect(404)
+            .end(done)
 
     })
 
 });
-
+//Test delete route
 describe('DELETE /todos/:id', ()=>{
     it('should remove a todo', (done)=>{
         var HexId = todos[1]._id.toHexString();
 
         request(app)
-        .delete(`/todos/${HexId}`)
-        .expect(200)
-        .expect((res)=>{
-            expect(res.body.todo._id).toBe(HexId);
-        })
-        .end((err,res)=>{
-            if(err){
-                return done(err);
-            }
+            .delete(`/todos/${HexId}`)
+            .expect(200)
+            .expect((res)=>{
+                expect(res.body.todo._id).toBe(HexId);
+            })
+            .end((err,res)=>{
+                if(err){
+                    return done(err);
+                }
         //query database using findById toNotExist
         //expect(null).toNotExist();
         Todo.findById(HexId).then((todo)=>{
             expect(todo).toBeFalsy() 
             done()
-        }).catch((e)=>done(e))
+            }).catch((e)=>done(e))
         })
     })
 
     it('should return 404 if todo not found',(done)=>{
         var hexId = new ObjectID().toHexString();
         request(app)
-        .get(`/todos/${hexId}`)
-        .expect(404)
-        .end(done);
+            .get(`/todos/${hexId}`)
+            .expect(404)
+            .end(done);
     })
 
     it('should return 404 if object id is invalid', (done)=>{
         request(app)
-        .delete('/todos/123')
-        .expect(404)
+            .delete('/todos/123')
+            .expect(404)
+            .end(done)
+    })
+})
+
+//Test PATCH route
+describe('PATCH /todos/:id',()=>{
+
+    it('should updated the todo', (done)=>{
+    //grab id of first item
+    //update text, setcompleted true
+    //200/text is changed, completed is true, completedAt is a number .toBeA
+    var HexId = todos[0]._id.toHexString();
+    var text = "Updated"
+    request(app)
+        .patch(`/todos/${HexId}`)
+        .send({
+            text,
+            completed: true,
+        })
+        .expect(200)
+        .expect((res)=>{
+            expect(res.body.todo.text).toBe(text)
+            expect(res.body.todo.completed).toBe(true)
+            expect(typeof res.body.todo.completedAt).toBe('number') //toBeA is no longer used in latest expect version
+        })
+        .end(done)
+    })
+
+    //when we change completed from 'true' to 'false'
+    it('should clear completedAt when todo is not completed', (done)=>{
+        //grab id of second todo item 
+        //update text, set completed to false
+        //200
+        //text is changed, completd false, completdAt is null .toBeFalsy
+        var HexId = todos[1]._id.toHexString();
+    var text = "Updated!!"
+    request(app)
+        .patch(`/todos/${HexId}`)
+        .send({
+            text,
+            completed: false,
+        })
+        .expect(200)
+        .expect((res)=>{
+            expect(res.body.todo.text).toBe(text)
+            expect(res.body.todo.completed).toBe(false)
+            expect(res.body.todo.completedAt).toBeFalsy() //toNotExist() is no longer used
+        })
         .end(done)
     })
 })
+
+
+//Error to learn
+// describe('PATCH /todos/:id',()=>{
+//     it('should updated the todo', (done)=>{
+//         //grab id of first item
+//         var HexId = todos[0]._id.toHexString();
+//         var text = "Updated"
+//         var completed = true
+//         var completedAt = new Date().getTime()
+//         request(app)
+//         .patch(`/todos/${HexId}`)
+//         .send({text,completed,completedAt})
+//         .expect(200)
+//         .expect((res)=>{
+//             expect(res.body.todo.text).toBe(text)
+//             expect(res.body.todo.completed).toBe(completed)
+//             expect(res.body.todo.completedAt).toBe(completedAt)
+//         })
+//         .end(done)
