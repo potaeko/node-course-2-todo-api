@@ -99,7 +99,7 @@ app.patch('/todos/:id',(req,res)=>{
     var id  = req.params.id;
     //we use pick function from lodash here
     //take object and pull exist property array we want to update
-    var body = _.pick(req.body, ['text', 'completed']);
+    var body = _.pick(req.body, ['text', 'completed']); //_.pick(where we want to pick, property to pick)
 
     //validate the id -> not valid? return 404
     if(!ObjectID.isValid(id)){
@@ -127,6 +127,27 @@ app.patch('/todos/:id',(req,res)=>{
     }) 
 
 })
+
+//POST /users  ; we can check if the email is valid or not
+app.post('/Users', (req,res)=>{
+    //_.pick(object we want to pick, property to pick)
+    var body = _.pick(req.body, ['email', 'password']);
+    var user = new Users(body);
+    //findByToken is custom method
+    // User.findByToken
+    // user.generateAuthToken
+
+
+    user.save().then(()=>{
+        //without return , x-auth in header will be undefined
+       return  user.generateAuthToken(); 
+        //res.send(user);
+    }).then((token)=>{
+        res.header('x-auth', token).send(user);
+    }).catch((e)=>{
+        res.status(400).send(e);
+    })
+});
 
 //const port = process.env.PORT || 3000;
 app.listen(port, ()=>{
