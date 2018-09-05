@@ -10,6 +10,7 @@ const {ObjectID} = require('mongodb')
 const {mongoose} = require('./db/mongoose');
 const {Todo} = require('./models/todo');
 const {Users} =require('./models/user');
+var {authenticate} = require('./middleware/authenticate')
 
 var app = express();
 //Deploy to Heroku, if the port is defined, if not we use local 3000
@@ -133,11 +134,7 @@ app.post('/Users', (req,res)=>{
     //_.pick(object we want to pick, property to pick)
     var body = _.pick(req.body, ['email', 'password']);
     var user = new Users(body);
-    //findByToken is custom method
-    // User.findByToken
-    // user.generateAuthToken
-
-
+    
     user.save().then(()=>{
         //without return , x-auth in header will be undefined
        return  user.generateAuthToken(); 
@@ -147,6 +144,13 @@ app.post('/Users', (req,res)=>{
     }).catch((e)=>{
         res.status(400).send(e);
     })
+});
+
+
+
+//pass in authenticate middleware
+app.get('/Users/me', authenticate, (req,res)=>{
+    res.send(req.user);
 });
 
 //const port = process.env.PORT || 3000;

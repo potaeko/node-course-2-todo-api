@@ -47,7 +47,7 @@ UserSchema.methods.toJSON = function (){
 
 
 UserSchema.methods.generateAuthToken = function(){
-    var user = this;
+    var user = this; //instant method 
     var access = 'auth';
     var token = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString();
 
@@ -55,6 +55,27 @@ UserSchema.methods.generateAuthToken = function(){
 
     return user.save().then(()=>{
         return token;
+    });
+};
+
+UserSchema.statics.findByToken = function(token) {
+    var User = this 
+    var decoded; 
+    //try-catch block
+    try{
+        decoded = jwt.verify(token, 'abc123')
+    }catch(e){
+        // return new Promise((resolve, reject)=>{
+        //     reject();
+        // }); , Promise.reject() below will do the same
+        return Promise.reject()
+    }
+    //below code will run if no error from try catch block
+    return User.findOne({
+        '_id': decoded._id,
+        'tokens.token': token,
+        'tokens.access': 'auth'
+
     });
 };
 
