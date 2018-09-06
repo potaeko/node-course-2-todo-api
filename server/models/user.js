@@ -1,11 +1,13 @@
 
-const mongoose = require ('mongoose')
+const mongoose = require ('mongoose');
 
 const validator = require('validator');
 
-const jwt =require('jsonwebtoken')
+const jwt =require('jsonwebtoken');
 
-const _ = require('lodash')
+const _ = require('lodash');
+
+const bcrypt = require('bcryptjs');
 
 var UserSchema = new mongoose.Schema({
     
@@ -78,6 +80,24 @@ UserSchema.statics.findByToken = function(token) {
 
     });
 };
+
+//we want to run save before we save to database, *have to provide next and call it*
+UserSchema.pre('save', function(next){
+    var user = this;
+    //.ismodified take individual property if password was modified
+    if(user.isModified('password')){
+        //above, const bcrypt = require('bcryptjs')
+        // we want to hash 'user.password'
+        bcrypt.genSalt(10, (err,salt)=>{//bigger number is longer algorithm
+            bcrypt.hash(user.password, salt, (err,hash)=>{ //we want to install the hash in database server
+                user.password = hash;
+                next();
+            });//if success, we can check in mongodb if the password is already hashed 
+        });
+    }else{
+        next()
+    }
+});
 
 
 var Users = mongoose.model('Users',UserSchema);

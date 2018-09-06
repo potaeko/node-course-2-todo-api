@@ -37,7 +37,7 @@ if(resultHash=== token.hash){
 }
 
 
-//**********************************************/
+//******************** JWT ***********************/
 
 //For real app, we are using jsonwebtoken
 const jwt = require('jsonwebtoken')
@@ -54,3 +54,22 @@ console.log(token)
 //take token and secretCode
 var decoded = jwt.verify(token, '123abc')
 console.log('decoded:',decoded)
+
+//*******************  BCRYPT  ***********************/
+const bcrypt = require('bcryptjs')
+
+var password = '123abc!';
+
+//.gensalt , .hash to use 
+bcrypt.genSalt(10, (err,salt)=>{//bigger number is longer algorithm
+    bcrypt.hash(password, salt, (err,hash)=>{ //we want to install the hash in database server
+        console.log(hash)
+    });
+});
+
+var hashedPassword = '$2a$10$iSGSQzoYb2QSXMwl9Ta12eyuLhxiRdW9rmu.MT.ML3bHnpgCLmlqu'
+
+//.compare
+bcrypt.compare(password,hashedPassword, (err,res)=>{
+    console.log(res); //true, when the password and hashedPassword is the same
+})
