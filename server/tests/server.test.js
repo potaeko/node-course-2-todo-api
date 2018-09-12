@@ -11,27 +11,27 @@ const {ObjectID} = require('mongodb');
 //access to the files
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo')
+const {Users} = require('./../models/user')
+
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed')
+
+//***Move to seed.js, and import from there*/
 
 //***To Test GET /todos
-const todos = [{
-    _id : new ObjectID(),
-    text : 'First test todo'
-}, {
-    _id : new ObjectID(),
-    text : 'Second test todo',
-    completed: true,
-    completedAt: 333
-}]; 
+// const todos = [{
+//     _id : new ObjectID(),
+//     text : 'First test todo'
+// }, {
+//     _id : new ObjectID(),
+//     text : 'Second test todo',
+//     completed: true,
+//     completedAt: 333
+// }]; 
 
-
+beforeEach(populateUsers)
 //**To Test POST /todos We will want to delete all the data in Mongodb before the test 
 //because "expect(todos[0].text).toBe(text); " we want to get the first item 
-beforeEach((done)=>{
-    Todo.deleteMany({}).then(()=>{
-        //insertMany method from mongoose method with const todos
-        return Todo.insertMany(todos);
-    }).then(done());
-});
+beforeEach(populateTodos);
 
 //describe makes Headline To show in Terminal for easier to read the test
 describe('Test POST /todos',()=>{    
@@ -190,7 +190,7 @@ describe('PATCH /todos/:id',()=>{
         //200
         //text is changed, completd false, completdAt is null .toBeFalsy
         var HexId = todos[1]._id.toHexString();
-    var text = "Updated!!"
+        var text = "Updated!!"
     request(app)
         .patch(`/todos/${HexId}`)
         .send({
@@ -204,11 +204,83 @@ describe('PATCH /todos/:id',()=>{
             expect(res.body.todo.completedAt).toBeFalsy() //toNotExist() is no longer used
         })
         .end(done)
-    })
-})
+    });
+});
+
+describe('GET /users/me', ()=>{
+    it('should return user if authenticated', (done)=>{
+        request(app)
+            .get('/users/me')
+            .set('x-auth', users[0].tokens[0].token) //provide the token
+            .expect(200)
+            .expect((res)=>{
+                expect(res.body._id).toBe(users[0]._id.toHexString());
+                expect(res.body.email).toBe(users[0].email);
+             })
+            .end(done);
+        });
+
+    it('should return 401 if not authenticated',(done)=>{
+        request(app)
+            .get('/users/me')
+            .expect(401)
+            .expect((res)=>{
+                expect(res.body).toEqual({})
+            })
+            .end(done)
+    });
+});
+
+describe('POST /users/me',()=>{
+    it('should create a user',(done)=>{
+        var email = 'emample@example.com'
+        var password = '123mnb!'
+        request(app)
+            .post('/users')
+            .send({email,password})
+            .expect(200)
+            .expect((res)=>{
+                expect(res.headers['x-auth']).toBeTruthy(); //lastest version of expect ,need change from .toExist() => .toBeTruthy()
+                expect(res.body._id).toBeTruthy();
+                expect(res.body.email).toBe(email)
+            })
+            .end((err)=>{
+                if(err){
+                    return done(err)
+                }
+                Users.findOne({email}).then((user)=>{ //need to import user model on the top to get {Users} 
+                    expect(user).toBeTruthy();
+                    expect(user.password).not.toBe(password); //lastest version of expect, .toNotBe() => .not.toBe()
+                    done();
+                })
+            })
+    });
+
+    it('should return validation errors if request invalid',(done)=>{
+        var email = 'example'; //need email format
+        var password = '123'; //need minimum 6
+        request(app)
+            .post('/users')
+            .send({email,password})
+            .expect(400)
+            .end(done)
+
+    });
+
+    it('should not create user if email in use',(done)=>{
+        request(app)
+            .post('/users')
+            .send({
+                email: users[0].email, //use the exist email whould get 400
+                password: 'Password123!'
+            })
+            .expect(400)
+            .end(done)
+    });
+});
 
 
-//Error to learn
+//selfmade Error to learn
 // describe('PATCH /todos/:id',()=>{
 //     it('should updated the todo', (done)=>{
 //         //grab id of first item

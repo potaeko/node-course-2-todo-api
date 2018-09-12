@@ -91,7 +91,7 @@ UserSchema.pre('save', function(next){
         bcrypt.genSalt(10, (err,salt)=>{//bigger number is longer algorithm
             bcrypt.hash(user.password, salt, (err,hash)=>{ //we want to install the hash in database server
                 user.password = hash;
-                next();
+                next(); //without next() , code will fail
             });//if success, we can check in mongodb if the password is already hashed 
         });
     }else{
