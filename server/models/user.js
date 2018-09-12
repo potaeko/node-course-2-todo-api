@@ -81,6 +81,30 @@ UserSchema.statics.findByToken = function(token) {
     });
 };
 
+//// make this findByCredentials model for POST /users/login {email, password} 
+UserSchema.statics.findByCredentials = function(email, password){
+    var User = this;
+    //there is no password store in our database to compare
+    //find email and verify password
+    return User.findOne({email}).then((user)=>{
+        if(!user){
+            return Promise.reject();
+        }
+        
+        return new Promise((resolve, reject)=>{
+            //Use bcrypt.compare to compare password and user.password
+            bcrypt.compare(password, user.password,(err,res)=>{ //user.password is hashed
+                if(res){
+                   resolve(user)
+                }
+                else{
+                    reject(); //will send 400 back
+                }
+            })
+        })
+    })
+};
+
 //we want to run save before we save to database, *have to provide next and call it*
 UserSchema.pre('save', function(next){
     var user = this;

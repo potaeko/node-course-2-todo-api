@@ -134,9 +134,10 @@ app.post('/Users', (req,res)=>{
     //_.pick(object we want to pick, property to pick)
     var body = _.pick(req.body, ['email', 'password']);
     var user = new Users(body);
-    
+
     user.save().then(()=>{
         //without return , x-auth in header will be undefined
+        //we create .generateAuthToken() method in user.js
        return  user.generateAuthToken(); 
         //res.send(user);
     }).then((token)=>{
@@ -152,6 +153,22 @@ app.post('/Users', (req,res)=>{
 app.get('/Users/me', authenticate, (req,res)=>{
     res.send(req.user);
 });
+
+// POST /users/login {email, password} 
+//when user log in we wwant to match email and compare hashpassword with bcrypt.compare
+app.post('/Users/login', (req,res)=>{
+    var body = _.pick(req.body, ['email', 'password']);
+    //***we create findBycredentials method in user.js
+    //Users is the model from user.js
+    Users.findByCredentials(body.email, body.password).then((user)=>{
+         return user.generateAuthToken().then((token)=>{
+            res.header('x-auth', token).send(user);
+         })
+        //res.send(user); used to check if it works in Postman
+    }).catch((e)=>{
+        res.status(400).send()
+    });
+})
 
 //const port = process.env.PORT || 3000;
 app.listen(port, ()=>{
