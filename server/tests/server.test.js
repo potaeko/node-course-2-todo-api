@@ -252,7 +252,7 @@ describe('POST /users/me',()=>{
                     expect(user).toBeTruthy();
                     expect(user.password).not.toBe(password); //lastest version of expect, .toNotBe() => .not.toBe()
                     done();
-                })
+                }).catch((e)=>done(e));
             })
     });
 
@@ -278,6 +278,57 @@ describe('POST /users/me',()=>{
             .end(done)
     });
 });
+
+
+describe('POST /users/login', ()=>{
+    it('should login user and return auth token',(done)=>{
+        request(app)
+            .post('/users/login')
+            .send({
+                email:users[1].email,
+                password: users[1].password
+            })
+            .expect(200)
+            .expect((res)=>{
+                expect(res.headers['x-auth']).toBeTruthy();//lastest version of expect ,need change from .toExist() => .toBeTruthy()
+            })
+            .end((err,res)=>{
+                if(err){
+                    return done(err);
+                }
+                Users.findById(users[1]._id).then((user)=>{
+                    expect(user.tokens[0]).toMatchObject({ //new version using .toMatchObject() instead of .toInclude()
+                        access: 'auth',
+                        token: res.headers['x-auth']
+                    });
+                    done();
+                }).catch((e)=>done(e)); //will show why it fail
+            })
+    });
+
+    it('should reject invalid login',(done)=>{
+        request(app)
+            .post('/users/login')
+            .send({
+                email:users[1].email+'1', //fail email
+                password: users[1].password
+            })
+            .expect(400)
+            .expect((res)=>{
+                expect(res.headers['x-auth']).toBeFalsy(); //should have no x-auth
+            })
+            .end((err,res)=>{
+                if(err){
+                    return done(err);
+                }
+                Users.findById(users[1]._id).then((user)=>{
+                    expect(user.tokens.length).toBe(0) //should have no token
+                    done();
+                }).catch((e)=>done(e)); //will show why it fail
+            })
+            })
+    });
+
 
 
 //selfmade Error to learn
