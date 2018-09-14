@@ -170,6 +170,15 @@ app.post('/Users/login', (req,res)=>{
     });
 })
 
+//Delete route, log out by delete token in headers x-auth
+app.delete('/users/me/token', authenticate, (req,res)=>{
+    req.user.removeToken(req.token).then(()=>{ //instant method .removeToken() in user.js
+        res.status(200).send();
+    },()=>{
+        res.status(400).send();
+    })
+});
+
 //const port = process.env.PORT || 3000;
 app.listen(port, ()=>{
     console.log(`Started on port ${port}`);
