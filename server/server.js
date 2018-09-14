@@ -170,7 +170,7 @@ app.post('/Users/login', (req,res)=>{
     });
 })
 
-//Delete route, log out by delete token in headers x-auth
+//Delete route, logging out by delete token in tokens array in headers x-auth
 app.delete('/users/me/token', authenticate, (req,res)=>{
     req.user.removeToken(req.token).then(()=>{ //instant method .removeToken() in user.js
         res.status(200).send();

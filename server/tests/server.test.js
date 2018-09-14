@@ -328,7 +328,23 @@ describe('POST /users/login', ()=>{
             })
             })
     });
-
+describe('DELETE /users/me/token', ()=>{
+    it('should remove auth token on logout',(done)=>{
+        request(app)
+        .delete('/users/me/token') //DELETE /users/me/token
+        .set('x-auth', users[0].tokens[0].token) //Set x-auth equal to token
+        .expect(200)
+        .end((err,res)=>{
+            if(err){ //handle the error
+                return done(err);
+            }
+            Users.findById(users[0]._id).then((user)=>{ //Find user, verify that tokens array has length of zero
+                expect(user.tokens.length).toBe(0) //should have no token
+                done();
+            }).catch((e)=>done(e)); //will show why it fail
+        })
+    })
+})
 
 
 //selfmade Error to learn
