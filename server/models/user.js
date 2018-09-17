@@ -53,8 +53,7 @@ UserSchema.methods.generateAuthToken = function(){
     var access = 'auth';
     var token = jwt.sign({_id: user._id.toHexString(), access}, process.env.JWT_SECRET).toString(); //removed secret code and replace with process.env.JWT_SECRET from config.json 
 
-    // user.tokens = user.tokens.concat([{access, token}]);
-    user.tokens = user.tokens.push({access, token});
+    user.tokens = user.tokens.concat([{access, token}]);
 
     return user.save().then(()=>{
         return token;
