@@ -21,12 +21,13 @@ app.use(bodyParser.json());
 
 // post todos route
 //express to access: created route /todos to add data
-app.post('/todos',(req,res)=>{
+app.post('/todos', authenticate, (req,res)=>{
     //console.log(req.body) to see what we get from Postman when we post JSON
 
     //save the request data to mongodb
     var todo = new Todo({
-        text: req.body.text
+        text: req.body.text,
+        _creator: req.user._id //making todo route private
     });
 
     todo.save().then((doc)=>{
@@ -37,8 +38,10 @@ app.post('/todos',(req,res)=>{
 });
 
 //get todos route
-app.get('/todos',(req,res)=>{
-    Todo.find().then((todos)=>{
+app.get('/todos',authenticate,(req,res)=>{
+    Todo.find({
+        _creator: req.user._id //making todo route private 
+    }).then((todos)=>{
         res.send({todos}) //handle success
     },(e)=>{              //handle error
         res.status(400).send(e);
@@ -48,7 +51,7 @@ app.get('/todos',(req,res)=>{
 
 
 //GET /todos/1234567 , fetch id parameter
-app.get('/todos/:id',(req,res)=>{
+app.get('/todos/:id', authenticate, (req,res)=>{
     //**get id from **params** ,caution params not param*
     var id = req.params.id;
     // res.send(req.params); //To test in Postman
@@ -59,7 +62,11 @@ app.get('/todos/:id',(req,res)=>{
         return res.status(404).send()
     }
     //findById
-    Todo.findById(id).then((todo)=>{
+    // Todo.findById(id).then((todo)=>{ ; changed after making a private route
+    Todo.findOne({
+        _id: id,
+        _creator: req.user._id
+    }).then((todo)=>{
         //if no todo - send back 404 with empty body
         if(!todo){
             return res.status(404).send();
@@ -73,7 +80,7 @@ app.get('/todos/:id',(req,res)=>{
     });
 
 //Delete route
-app.delete('/todos/:id',(req,res)=>{
+app.delete('/todos/:id',authenticate, (req,res)=>{
     //get the id
     var id = req.params.id
 
@@ -82,7 +89,11 @@ app.delete('/todos/:id',(req,res)=>{
         return res.status(404).send();
     }
     //remove todo by id
-    Todo.findByIdAndRemove(id).then((todo)=>{
+    // Todo.findByIdAndRemove(id).then((todo)=>{ //removed after making private route
+    Todo.findOneAndRemove({ //private route
+        _id: id,
+        _creator: req.user._id
+    }).then((todo)=>{    
         //if no doc, send 404
         if(!todo){
            return  res.status(404).send()
@@ -96,7 +107,7 @@ app.delete('/todos/:id',(req,res)=>{
 })
         
 //Patch, Update todos items
-app.patch('/todos/:id',(req,res)=>{
+app.patch('/todos/:id',authenticate, (req,res)=>{ //added authenticate middleware for making private route
     var id  = req.params.id;
     //we use pick function from lodash here
     //take object and pull exist property array we want to update
@@ -116,7 +127,12 @@ app.patch('/todos/:id',(req,res)=>{
         body.completedAt = null;
     }
     //We will update here   
-    Todo.findByIdAndUpdate(id, {$set:body},{new: true}).then((todo)=>{ //new is to show the update
+    // Todo.findByIdAndUpdate(id, {$set:body},{new: true}).then((todo)=>{ //new is to show the update; removed after making private route
+    Todo.findOneAndUpdate( 
+        {_id: id,
+        _creator: req.user._id}, //making private route
+        {$set:body},
+        {new: true}).then((todo)=>{ 
         //if no data for that id
         if(!todo){
             return res.status(404).send()
