@@ -353,7 +353,7 @@ describe('POST /users/login', ()=>{
                     return done(err);
                 }
                 Users.findById(users[1]._id).then((user)=>{
-                    expect(user.tokens[1]).toMatchObject({ //new version using .toMatchObject() instead of .toInclude()
+                    expect(user.toObject().tokens[1]).toMatchObject({ //new version using .toMatchObject() instead of .toInclude()
                         access: 'auth',
                         token: res.headers['x-auth']
                     });
